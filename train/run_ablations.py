@@ -91,6 +91,30 @@ def saliency_vs_true_loss(seed=0, n_probe=400, epochs=25):
     return out
 
 
+def scope_robustness(seeds, sparsity=0.99):
+    """Does the criterion gap survive when the magnitude baseline is given the better
+    (global) layer allocation? Uniform per-layer sparsity forces the 1,280-weight output layer
+    down to ~13 weights at 99%, which could unfairly handicap magnitude pruning."""
+    crits, scopes = ("magnitude", "taylor", "fisher"), ("layer", "global")
+    jobs = [dict(criterion=c, scope=sc, sparsity=sparsity, seed=s) for c in crits for sc in scopes for s in seeds]
+    raw = run_many(jobs, desc="scope-robustness")
+    acc = {(c, sc): np.array([r["test_acc"] for r in raw if r["criterion"] == c and r["scope"] == sc]) for c in crits for sc in scopes}
+    lines = [f"Scope robustness at {sparsity:.0%} sparsity, {len(seeds)} seeds. Paired difference = criterion minus magnitude, same scope.\n",
+             "| scope | criterion | test acc (mean +/- sd) | diff vs magnitude (pp) | 95% CI (pp) | p | W/T/L |", "|---|---|---|---|---|---|---|"]
+    for sc in scopes:
+        for c in crits:
+            a = acc[(c, sc)]
+            if c == "magnitude":
+                lines.append(f"| {sc} | {c} | {a.mean():.4f} +/- {a.std(ddof=1):.4f} | - | - | - | - |")
+                continue
+            st = paired_stats(a - acc[("magnitude", sc)])
+            lines.append(f"| {sc} | {c} | {a.mean():.4f} +/- {a.std(ddof=1):.4f} | {100 * st['mean']:+.2f} | "
+                         f"[{100 * st['ci_lo']:+.2f}, {100 * st['ci_hi']:+.2f}] | {st['p_perm']:.4f} | "
+                         f"{st['wins']}/{st['ties']}/{st['losses']} |")
+    open(os.path.join(RESULTS, "scope_robustness.md"), "w").write("\n".join(lines) + "\n")
+    print("\n".join(lines))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sparsity", type=float, default=0.98)
@@ -127,6 +151,8 @@ def main():
                      f"{r['p_perm']:.3f} | {r['mean_event_churn']:.3f} |")
     open(os.path.join(RESULTS, "ablations.md"), "w").write("\n".join(lines) + "\n")
     print("\n".join(lines))
+
+    scope_robustness(seeds)
 
     sal = [saliency_vs_true_loss(seed=s) for s in range(3)]
     avg = {c: float(np.mean([x[c] for x in sal])) for c in ("magnitude", "taylor", "fisher", "taylor2")}

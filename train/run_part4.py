@@ -239,6 +239,12 @@ def main():
     sparsities = [0.0, 0.5, 0.75, 0.9, 0.95, 0.98, 0.99] if not a.quick else [0.0, 0.9, 0.98]
     seeds = list(range(10)) if not a.quick else [0, 1, 2]
     t0 = time.time()
+    if a.cost_only:
+        cost = cost_study(sparsities, seed=0)
+        write_csv(os.path.join(RESULTS, "cost.csv"), cost)
+        json.dump(cost, open(os.path.join(RESULTS, "cost.json"), "w"), indent=1)
+        plot_cost(cost, os.path.join(RESULTS, "cost.png"))
+        return
 
     print("[4.1] sparsity sweep")
     raw = sweep(sparsities, seeds)
