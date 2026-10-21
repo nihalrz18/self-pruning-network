@@ -205,11 +205,13 @@ def write_claim(raw, summary, comp, seeds, path):
     low_txt = ("At <= 90% sparsity the paired CI for %s vs magnitude includes 0 at every tested level, i.e. "
                "no detectable difference there." % PRIMARY if not sig_low else
                "At <= 90% sparsity the CI excludes 0 at: " + ", ".join(f"{r['sparsity']:.0%}" for r in sig_low) + ".")
+    scope_file = os.path.join(RESULTS, "scope_robustness.md")
+    scope_txt = open(scope_file).read() if os.path.exists(scope_file) else ""
     txt = (f"# Falsifiable claim (auto-generated from results/pareto_raw.csv)\n\n"
            f"**At {sp:.0%} sparsity (~{live} of 50,432 weights alive) on sklearn digits with a "
            f"64-256-128-10 MLP, self-pruning with the `{PRIMARY}` (diagonal empirical Fisher / OBD) "
            f"criterion reaches {100 * c['mean_acc_method']:.2f}% test accuracy versus "
-           f"{100 * c['mean_acc_baseline']:.2f}% for magnitude pruning under an identical cubic schedule, "
+           f"{100 * c['mean_acc_baseline']:.2f}% for magnitude pruning under an identical cubic schedule and uniform per-layer sparsity, "
            f"averaged over {c['n']} seeds (paired difference {100 * c['diff_mean']:+.2f} pp, "
            f"95% bootstrap CI [{100 * c['ci95_lo']:+.2f}, {100 * c['ci95_hi']:+.2f}] pp, "
            f"exact sign-flip permutation p = {c['p_perm']:.4f}, wins/ties/losses = "
@@ -223,9 +225,12 @@ def write_claim(raw, summary, comp, seeds, path):
            f"sparsity, so the 98-99% settings are where a difference was expected. The full table over all "
            f"sparsities and all criteria (baseline_comparison.md) is the unfiltered record.\n"
            f"* {low_txt}\n"
+           f"* IMPORTANT CAVEAT (from `python -m train.run_ablations`): the 99% gap is largely an allocation effect. "
+           f"With uniform per-layer sparsity the 1,280-weight output layer is cut to ~13 weights, which hurts "
+           f"magnitude pruning most. If layers are instead ranked globally the gap shrinks to the table below.\n"
            f"* Seeds vary init, mini-batch order AND the train/val/test split, but the dataset is small "
            f"(450 test images: one image = 0.22 pp), and seeds, not test images, are the unit of "
-           f"replication.\n")
+           f"replication.\n\n" + scope_txt)
     open(path, "w").write(txt)
     print(txt)
 
@@ -233,6 +238,7 @@ def write_claim(raw, summary, comp, seeds, path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true")
+    ap.add_argument("--claim-only", action="store_true", help="recompute summary/comparison/claim from results/pareto_raw.csv")
     ap.add_argument("--cost-only", action="store_true", help="re-run only the 4.2 cost study")
     a = ap.parse_args()
     os.makedirs(RESULTS, exist_ok=True)
@@ -246,9 +252,22 @@ def main():
         plot_cost(cost, os.path.join(RESULTS, "cost.png"))
         return
 
-    print("[4.1] sparsity sweep")
-    raw = sweep(sparsities, seeds)
-    write_csv(os.path.join(RESULTS, "pareto_raw.csv"), raw)
+    if a.claim_only:
+        def num(v):
+            try:
+                return float(v)
+            except ValueError:
+                return v
+
+        raw = [{k: num(v) for k, v in r.items()} for r in csv.DictReader(open(os.path.join(RESULTS, "pareto_raw.csv")))]
+        for r in raw:
+            r["seed"] = int(r["seed"])
+        seeds = sorted({r["seed"] for r in raw})
+        sparsities = sorted({r["target_sparsity"] for r in raw} | {0.0})
+    else:
+        print("[4.1] sparsity sweep")
+        raw = sweep(sparsities, seeds)
+        write_csv(os.path.join(RESULTS, "pareto_raw.csv"), raw)
     summary = summarize(raw, sparsities, seeds)
     write_csv(os.path.join(RESULTS, "pareto_summary.csv"), summary)
     plot_pareto(summary, os.path.join(RESULTS, "pareto.png"))
@@ -262,11 +281,12 @@ def main():
     write_markdown(comp, os.path.join(RESULTS, "baseline_comparison.md"))
     print(open(os.path.join(RESULTS, "baseline_comparison.md")).read())
 
-    print("[4.2] cost measurement")
-    cost = cost_study([s for s in sparsities], seed=0)
-    write_csv(os.path.join(RESULTS, "cost.csv"), cost)
-    json.dump(cost, open(os.path.join(RESULTS, "cost.json"), "w"), indent=1)
-    plot_cost(cost, os.path.join(RESULTS, "cost.png"))
+    if not a.claim_only:
+        print("[4.2] cost measurement")
+        cost = cost_study([s for s in sparsities], seed=0)
+        write_csv(os.path.join(RESULTS, "cost.csv"), cost)
+        json.dump(cost, open(os.path.join(RESULTS, "cost.json"), "w"), indent=1)
+        plot_cost(cost, os.path.join(RESULTS, "cost.png"))
 
     print("[4.4] claim")
     write_claim(raw, summary, comp, seeds, os.path.join(RESULTS, "claim.md"))
