@@ -1,0 +1,46 @@
+[
+ {
+  "init": "zeros",
+  "preact_std_per_layer": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "final_train_loss": 2.300557675865327,
+  "final_test_acc": 0.07777777777777778,
+  "nan": false
+ },
+ {
+  "init": "0.1 x He",
+  "preact_std_per_layer": [
+   0.136474909492368,
+   0.014128029262486973,
+   0.0016020372701040346
+  ],
+  "final_train_loss": 0.001252995422955536,
+  "final_test_acc": 0.9733333333333334,
+  "nan": false
+ },
+ {
+  "init": "He (ours)",
+  "preact_std_per_layer": [
+   1.36474909492368,
+   1.4128029262486974,
+   1.6020372701040344
+  ],
+  "final_train_loss": 0.0013250522113417637,
+  "final_test_acc": 0.9777777777777777,
+  "nan": false
+ },
+ {
+  "init": "10 x He",
+  "preact_std_per_layer": [
+   13.6474909492368,
+   141.28029262486973,
+   1602.0372701040342
+  ],
+  "final_train_loss": 0.25322107153985834,
+  "final_test_acc": 0.8911111111111111,
+  "nan": false
+ }
+]
