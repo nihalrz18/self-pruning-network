@@ -37,7 +37,7 @@ def make_optimizer(name: str, params, lr: float, weight_decay: float = 0.0):
 
 def fit(model: Sequential, data: Split, epochs: int, batch_size: int = 64, lr: float = 3e-3,
         optimizer: str = "adam", seed: int = 0, pruner=None, weight_decay: float = 0.0,
-        verbose: bool = False, log_every: int = 10) -> dict:
+        verbose: bool = False, log_every: int = 10, eval_every: int = 1) -> dict:
     """Train with mini-batches. If `pruner` is given it is told about every step:
        observe()  after backward (reads grads, updates importance statistics)
        update()   after the optimizer step (may change masks + wipe optimizer state)
@@ -69,6 +69,8 @@ def fit(model: Sequential, data: Split, epochs: int, batch_size: int = 64, lr: f
             if pruner is not None:
                 pruner.update(step)
             step += 1
+        if ep % eval_every and ep != epochs:
+            continue
         trl, tra = evaluate(model, data.x_train, data.y_train)
         _, vaa = evaluate(model, data.x_val, data.y_val)
         tel, tea = evaluate(model, data.x_test, data.y_test)

@@ -43,7 +43,7 @@ class SelfPruner:
                  schedule: str = "cubic", start_step: int = 200, end_step: int = 1200,
                  every: int = 25, regrow_frac: float = 0.0, scope: str = "layer",
                  ema: float = 0.9, protect: int | None = None, min_layer_frac: float = 0.02,
-                 seed: int = 0):
+                 reset_state: bool = True, seed: int = 0):
         assert criterion in CRITERIA, criterion
         assert scope in ("layer", "global")
         self.criterion, self.s_final = criterion, final_sparsity
@@ -52,6 +52,7 @@ class SelfPruner:
         self.regrow_frac, self.scope, self.ema = regrow_frac, scope, ema
         self.protect = every if protect is None else protect
         self.min_layer_frac = min_layer_frac
+        self.reset_state = reset_state  # False only for the ablation that reproduces the bug
         self.rng = np.random.RandomState(seed + 777)
         self.log: list[dict] = []
         self.model = None
@@ -129,7 +130,8 @@ class SelfPruner:
         layer.set_mask(new.astype(np.float64))
         layer.weight.data[grown] = 0.0  # revived weights start from exact 0 (RigL convention)
         changed = dropped | grown
-        self.opt.on_mask_change(layer.weight, changed)
+        if self.reset_state:
+            self.opt.on_mask_change(layer.weight, changed)
         st.reset(changed)
         self.age[i][grown] = 0
         return dict(layer=i, live=int(new.sum()), size=int(new.size), dropped=int(dropped.sum()),
