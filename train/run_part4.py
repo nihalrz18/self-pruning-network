@@ -196,6 +196,11 @@ def write_claim(raw, summary, comp, seeds, path):
     c = [r for r in comp if r["sparsity"] == sp and r["method"] == PRIMARY][0]
     dense = [r for r in summary if r["method"] == "dense"][0]["test_acc_mean"]
     live = int(round((1 - sp) * 50432))
+    low = [r for r in comp if r["sparsity"] <= 0.9 and r["method"] == PRIMARY]
+    sig_low = [r for r in low if r["ci95_lo"] > 0 or r["ci95_hi"] < 0]
+    low_txt = ("At <= 90% sparsity the paired CI for %s vs magnitude includes 0 at every tested level, i.e. "
+               "no detectable difference there." % PRIMARY if not sig_low else
+               "At <= 90% sparsity the CI excludes 0 at: " + ", ".join(f"{r['sparsity']:.0%}" for r in sig_low) + ".")
     txt = (f"# Falsifiable claim (auto-generated from results/pareto_raw.csv)\n\n"
            f"**At {sp:.0%} sparsity (~{live} of 50,432 weights alive) on sklearn digits with a "
            f"64-256-128-10 MLP, self-pruning with the `{PRIMARY}` (diagonal empirical Fisher / OBD) "
@@ -208,10 +213,15 @@ def write_claim(raw, summary, comp, seeds, path):
            f"The dense model scores {100 * dense:.2f}%.**\n\n"
            f"It is falsified if re-running `python -m train.run_part4` yields a paired difference whose "
            f"95% CI includes 0 at this sparsity.\n\n"
-           f"Scope / honesty notes: seeds vary init, mini-batch order AND the train/val/test split, but "
-           f"the dataset is small (450 test images, so one image = 0.22 pp). At <= 90% sparsity the "
-           f"methods are statistically indistinguishable (see baseline_comparison.md): the benefit of "
-           f"sensitivity-aware importance appears only when the budget becomes tight.\n")
+           f"Scope / honesty notes:\n"
+           f"* The claim is stated at the HIGHEST sparsity in the sweep. That choice is not blind: an "
+           f"exploratory 4-seed run during development showed the criteria separating only at very high "
+           f"sparsity, so the 98-99% settings are where a difference was expected. The full table over all "
+           f"sparsities and all criteria (baseline_comparison.md) is the unfiltered record.\n"
+           f"* {low_txt}\n"
+           f"* Seeds vary init, mini-batch order AND the train/val/test split, but the dataset is small "
+           f"(450 test images: one image = 0.22 pp), and seeds, not test images, are the unit of "
+           f"replication.\n")
     open(path, "w").write(txt)
     print(txt)
 
