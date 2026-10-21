@@ -22,7 +22,7 @@ import time
 import numpy as np
 
 from engine import Tensor
-from prune import SparseMLP, compact_dense_forward, dense_masked_forward
+from prune import SparseMLP, compact_dense_forward, dense_masked_forward, make_dense_forward
 from .experiment import run_one, HIDDEN
 from .parallel import run_many
 from .run_part2 import RESULTS
@@ -92,13 +92,16 @@ def plot_pareto(summary, path):
 
 # ------------------------------------------------------------------- 4.2 cost
 def _time(fn, x, reps):
+    """Best-of-9 blocks, each the mean of reps/9 calls: robust to scheduler noise."""
     fn(x)
-    ts = []
-    for _ in range(reps):
+    n = max(1, reps // 9)
+    best = float("inf")
+    for _ in range(9):
         t = time.perf_counter()
-        fn(x)
-        ts.append(time.perf_counter() - t)
-    return float(np.median(ts))
+        for _ in range(n):
+            fn(x)
+        best = min(best, (time.perf_counter() - t) / n)
+    return best
 
 
 def cost_study(sparsities, seed=0):
@@ -107,6 +110,7 @@ def cost_study(sparsities, seed=0):
         res, model, hist, pruner, data = run_one(PRIMARY if sp > 0 else None, sp, seed, return_model=True)
         sparse = SparseMLP(model)
         cfwd, kept, compact_w = compact_dense_forward(model)
+        dfwd = make_dense_forward(model)
         total_w = sum(l.weight.size for l in model.linears())
         for batch in (1, 64, 450):
             x = data.x_test[:batch] if batch <= len(data.x_test) else data.x_test
@@ -119,7 +123,7 @@ def cost_study(sparsities, seed=0):
             measured = sparse.mults()
             dense_mults = total_w * len(x)
             reps = 300 if batch < 100 else 60
-            t_dense = _time(lambda z: dense_masked_forward(model, z), x, reps)
+            t_dense = _time(dfwd, x, reps)
             t_sparse = _time(sparse.forward, x, reps)
             t_compact = _time(cfwd, x, reps)
             rows.append(dict(
@@ -229,6 +233,7 @@ def write_claim(raw, summary, comp, seeds, path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true")
+    ap.add_argument("--cost-only", action="store_true", help="re-run only the 4.2 cost study")
     a = ap.parse_args()
     os.makedirs(RESULTS, exist_ok=True)
     sparsities = [0.0, 0.5, 0.75, 0.9, 0.95, 0.98, 0.99] if not a.quick else [0.0, 0.9, 0.98]

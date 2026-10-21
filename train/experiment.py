@@ -34,6 +34,8 @@ def run_one(criterion: str | None, sparsity: float, seed: int, *, schedule="cubi
                val_acc=hist["val_acc"][-1], train_acc=hist["train_acc"][-1],
                test_loss=hist["test_loss"][-1], schedule=schedule, regrow_frac=regrow_frac, scope=scope,
                ema=ema, reset_state=reset_state)
+    if pruner is not None and pruner.log:
+        res["mean_churn"] = float(np.mean([l["churn"] for ev in pruner.log for l in ev["layers"]]))
     if return_model:
         return res, model, hist, pruner, data
     return res

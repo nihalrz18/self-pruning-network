@@ -94,6 +94,24 @@ def dense_masked_forward(model: Sequential, x: np.ndarray) -> np.ndarray:
     return x
 
 
+def make_dense_forward(model: Sequential):
+    """Same dense-times-zero computation with W*M folded once up front (fair timing baseline:
+    no per-call masking overhead). Still performs batch*in*out multiplies per layer."""
+    ops = []
+    for layer in model.layers:
+        if isinstance(layer, Linear):
+            ops.append((layer.weight.data * layer.mask, layer.bias.data.copy()))
+        else:
+            ops.append(_ACTS[type(layer).__name__])
+
+    def fwd(x):
+        for op in ops:
+            x = x @ op[0] + op[1] if isinstance(op, tuple) else op(x)
+        return x
+
+    return fwd
+
+
 def compact_dense_forward(model: Sequential):
     """Structured gain that unstructured pruning sometimes gives for free: a hidden unit
     with no live OUTGOING weight is never read; one with no live INCOMING weight emits the

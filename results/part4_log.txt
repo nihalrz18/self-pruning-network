@@ -1,10 +1,91 @@
-Traceback (most recent call last):
-  File "<frozen runpy>", line 194, in _run_module_as_main
-  File "<frozen runpy>", line 164, in _get_module_details
-  File "<frozen importlib._bootstrap_external>", line 893, in get_code
-  File "<frozen importlib._bootstrap_external>", line 823, in source_to_code
-  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
-  File "C:\Github Projects\Tredence Assignment\train\run_part4.py", line 204
-    txt = (f"# Falsifiable claim (auto-generated from results/pareto_raw.csv)
-           ^
-SyntaxError: unterminated f-string literal (detected at line 204)
+[4.1] sparsity sweep
+  sweep 31/310
+  sweep 62/310
+  sweep 93/310
+  sweep 124/310
+  sweep 155/310
+  sweep 186/310
+  sweep 217/310
+  sweep 248/310
+  sweep 279/310
+  sweep 310/310
+  dense     target 0.00 achieved 0.0000 acc 0.9742 +/- 0.0056
+  magnitude target 0.50 achieved 0.5000 acc 0.9727 +/- 0.0065
+  magnitude target 0.75 achieved 0.7500 acc 0.9724 +/- 0.0052
+  magnitude target 0.90 achieved 0.9000 acc 0.9733 +/- 0.0058
+  magnitude target 0.95 achieved 0.9500 acc 0.9724 +/- 0.0065
+  magnitude target 0.98 achieved 0.9800 acc 0.9604 +/- 0.0134
+  magnitude target 0.99 achieved 0.9900 acc 0.8464 +/- 0.0837
+  taylor    target 0.50 achieved 0.5000 acc 0.9760 +/- 0.0067
+  taylor    target 0.75 achieved 0.7500 acc 0.9771 +/- 0.0057
+  taylor    target 0.90 achieved 0.9000 acc 0.9742 +/- 0.0066
+  taylor    target 0.95 achieved 0.9500 acc 0.9696 +/- 0.0079
+  taylor    target 0.98 achieved 0.9800 acc 0.9687 +/- 0.0067
+  taylor    target 0.99 achieved 0.9900 acc 0.9533 +/- 0.0106
+  fisher    target 0.50 achieved 0.5000 acc 0.9738 +/- 0.0074
+  fisher    target 0.75 achieved 0.7500 acc 0.9762 +/- 0.0069
+  fisher    target 0.90 achieved 0.9000 acc 0.9744 +/- 0.0079
+  fisher    target 0.95 achieved 0.9500 acc 0.9729 +/- 0.0034
+  fisher    target 0.98 achieved 0.9800 acc 0.9636 +/- 0.0105
+  fisher    target 0.99 achieved 0.9900 acc 0.9502 +/- 0.0154
+  taylor2   target 0.50 achieved 0.5000 acc 0.9762 +/- 0.0076
+  taylor2   target 0.75 achieved 0.7500 acc 0.9753 +/- 0.0057
+  taylor2   target 0.90 achieved 0.9000 acc 0.9753 +/- 0.0061
+  taylor2   target 0.95 achieved 0.9500 acc 0.9716 +/- 0.0092
+  taylor2   target 0.98 achieved 0.9800 acc 0.9651 +/- 0.0105
+  taylor2   target 0.99 achieved 0.9900 acc 0.9413 +/- 0.0295
+  random    target 0.50 achieved 0.5000 acc 0.9720 +/- 0.0069
+  random    target 0.75 achieved 0.7500 acc 0.9691 +/- 0.0061
+  random    target 0.90 achieved 0.9000 acc 0.9636 +/- 0.0090
+  random    target 0.95 achieved 0.9500 acc 0.9560 +/- 0.0098
+  random    target 0.98 achieved 0.9800 acc 0.6967 +/- 0.0595
+  random    target 0.99 achieved 0.9900 acc 0.2716 +/- 0.0343
+[4.3] baseline comparison (paired over seeds)
+| sparsity | method | acc(method) | acc(magnitude) | diff (pp) | 95% CI (pp) | p (perm.) | W/T/L |
+|---|---|---|---|---|---|---|---|
+| 50% | taylor | 0.9760 | 0.9727 | +0.33 | [+0.16, +0.51] | 0.0195 | 8/1/1 |
+| 50% | fisher | 0.9738 | 0.9727 | +0.11 | [-0.09, +0.29] | 0.3945 | 6/1/3 |
+| 50% | taylor2 | 0.9762 | 0.9727 | +0.36 | [+0.16, +0.58] | 0.0195 | 8/1/1 |
+| 50% | random | 0.9720 | 0.9727 | -0.07 | [-0.44, +0.27] | 0.8359 | 5/1/4 |
+| 75% | taylor | 0.9771 | 0.9724 | +0.47 | [+0.13, +0.80] | 0.0430 | 8/0/2 |
+| 75% | fisher | 0.9762 | 0.9724 | +0.38 | [+0.02, +0.78] | 0.1328 | 6/2/2 |
+| 75% | taylor2 | 0.9753 | 0.9724 | +0.29 | [-0.02, +0.60] | 0.1641 | 6/1/3 |
+| 75% | random | 0.9691 | 0.9724 | -0.33 | [-0.58, -0.04] | 0.0781 | 2/0/8 |
+| 90% | taylor | 0.9742 | 0.9733 | +0.09 | [-0.36, +0.53] | 0.7852 | 5/1/4 |
+| 90% | fisher | 0.9744 | 0.9733 | +0.11 | [-0.49, +0.62] | 0.7695 | 7/0/3 |
+| 90% | taylor2 | 0.9753 | 0.9733 | +0.20 | [-0.24, +0.64] | 0.4824 | 6/0/4 |
+| 90% | random | 0.9636 | 0.9733 | -0.98 | [-1.38, -0.60] | 0.0020 | 0/0/10 |
+| 95% | taylor | 0.9696 | 0.9724 | -0.29 | [-0.78, +0.20] | 0.3477 | 4/1/5 |
+| 95% | fisher | 0.9729 | 0.9724 | +0.04 | [-0.33, +0.40] | 0.9102 | 6/0/4 |
+| 95% | taylor2 | 0.9716 | 0.9724 | -0.09 | [-0.62, +0.44] | 0.8145 | 5/0/5 |
+| 95% | random | 0.9560 | 0.9724 | -1.64 | [-2.22, -1.00] | 0.0039 | 1/0/9 |
+| 98% | taylor | 0.9687 | 0.9604 | +0.82 | [+0.02, +1.64] | 0.1094 | 6/1/3 |
+| 98% | fisher | 0.9636 | 0.9604 | +0.31 | [-0.40, +1.02] | 0.4668 | 5/0/5 |
+| 98% | taylor2 | 0.9651 | 0.9604 | +0.47 | [-0.13, +1.02] | 0.1875 | 6/1/3 |
+| 98% | random | 0.6967 | 0.9604 | -26.38 | [-30.16, -22.53] | 0.0020 | 0/0/10 |
+| 99% | taylor | 0.9533 | 0.8464 | +10.69 | [+6.33, +16.40] | 0.0020 | 10/0/0 |
+| 99% | fisher | 0.9502 | 0.8464 | +10.38 | [+6.00, +16.04] | 0.0020 | 10/0/0 |
+| 99% | taylor2 | 0.9413 | 0.8464 | +9.49 | [+6.18, +13.36] | 0.0020 | 10/0/0 |
+| 99% | random | 0.2716 | 0.8464 | -57.49 | [-61.71, -51.89] | 0.0020 | 0/0/10 |
+
+[4.2] cost measurement
+  sparsity 0%: 50432/50432 live weights, 1.0x fewer multiplies (measured)
+  sparsity 50%: 25216/50432 live weights, 2.0x fewer multiplies (measured)
+  sparsity 75%: 12608/50432 live weights, 4.0x fewer multiplies (measured)
+  sparsity 90%: 5043/50432 live weights, 10.0x fewer multiplies (measured)
+  sparsity 95%: 2521/50432 live weights, 20.0x fewer multiplies (measured)
+  sparsity 98%: 1009/50432 live weights, 50.0x fewer multiplies (measured)
+  sparsity 99%: 505/50432 live weights, 99.9x fewer multiplies (measured)
+[4.4] claim
+# Falsifiable claim (auto-generated from results/pareto_raw.csv)
+
+**At 99% sparsity (~504 of 50,432 weights alive) on sklearn digits with a 64-256-128-10 MLP, self-pruning with the `fisher` (diagonal empirical Fisher / OBD) criterion reaches 95.02% test accuracy versus 84.64% for magnitude pruning under an identical cubic schedule, averaged over 10 seeds (paired difference +10.38 pp, 95% bootstrap CI [+6.00, +16.04] pp, exact sign-flip permutation p = 0.0020, wins/ties/losses = 10/0/0). The dense model scores 97.42%.**
+
+It is falsified if re-running `python -m train.run_part4` yields a paired difference whose 95% CI includes 0 at this sparsity.
+
+Scope / honesty notes:
+* The claim is stated at the HIGHEST sparsity in the sweep. That choice is not blind: an exploratory 4-seed run during development showed the criteria separating only at very high sparsity, so the 98-99% settings are where a difference was expected. The full table over all sparsities and all criteria (baseline_comparison.md) is the unfiltered record.
+* At <= 90% sparsity the CI excludes 0 at: 75%.
+* Seeds vary init, mini-batch order AND the train/val/test split, but the dataset is small (450 test images: one image = 0.22 pp), and seeds, not test images, are the unit of replication.
+
+total 830s
