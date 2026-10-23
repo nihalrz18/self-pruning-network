@@ -34,9 +34,9 @@ BASELINE = "magnitude"
 
 
 def write_csv(path, rows):
-    keys = list(rows[0].keys())
+    keys = list(dict.fromkeys(k for r in rows for k in r))  # union: dense rows lack some columns
     with open(path, "w", newline="") as f:
-        w = csv.DictWriter(f, keys)
+        w = csv.DictWriter(f, keys, restval="")
         w.writeheader()
         w.writerows(rows)
 
