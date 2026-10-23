@@ -1,4 +1,4 @@
-# AQUA — The Self-Pruning Network
+# The Self-Pruning Network
 
 A neural-network library written from scratch in **pure Python + NumPy** (reverse-mode autodiff, layers, Adam,
 training loop) and a network that **prunes itself while it trains**, under a hard sparsity budget, with the
